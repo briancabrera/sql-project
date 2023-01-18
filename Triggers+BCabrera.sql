@@ -19,14 +19,14 @@ CREATE TRIGGER tg_after_assignment_insert AFTER INSERT ON assignment
 FOR EACH ROW
 BEGIN
 	DECLARE prof_id INT;
-    
+
 	SELECT class_id
-    INTO prof_id
-    FROM class 
-    WHERE class_id = NEW.class_id;
-    
+	INTO prof_id
+	FROM class 
+	WHERE class_id = NEW.class_id;
+
 	INSERT INTO assignments_log(date, time, assignment_id, professor_id, action)
-    VALUES (CURDATE(), CURTIME(), NEW.assignment_id, prof_id, 'create');
+	VALUES (CURDATE(), CURTIME(), NEW.assignment_id, prof_id, 'create');
 END
 $$
 
@@ -45,12 +45,12 @@ BEGIN
 	DECLARE prof_id INT;
     
 	SELECT class_id
-    INTO prof_id
-    FROM class 
-    WHERE class_id = NEW.class_id;
+    	INTO prof_id
+    	FROM class 
+    	WHERE class_id = NEW.class_id;
     
 	INSERT INTO assignments_log(date, time, assignment_id, professor_id, action)
-    VALUES (CURDATE(), CURTIME(), NEW.assignment_id, prof_id, 'delete');
+    	VALUES (CURDATE(), CURTIME(), NEW.assignment_id, prof_id, 'delete');
 END
 $$
 
@@ -70,12 +70,12 @@ BEGIN
 	DECLARE prof_id INT;
     
 	SELECT class_id
-    INTO prof_id
-    FROM class 
-    WHERE class_id = NEW.class_id;
+    	INTO prof_id
+    	FROM class 
+    	WHERE class_id = NEW.class_id;
     
 	INSERT INTO assignments_log(date, time, assignment_id, professor_id, action)
-    VALUES (CURDATE(), CURTIME(), NEW.assignment_id, prof_id, 'update');
+    	VALUES (CURDATE(), CURTIME(), NEW.assignment_id, prof_id, 'update');
 END
 $$
 
