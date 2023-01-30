@@ -56,7 +56,7 @@ CALL sp_create_professor('Juan Pablo', 'Romero', '41176482', 'jp.romerop@gmail.c
 CALL sp_create_professor('Roman', 'Chelsea', '38116412', 'romanchelsea@gmail.com', 'romanchelsea', DATE('1978-10-08'), 4, 4, '091833424');
 SAVEPOINT svp_1;
 CALL sp_create_professor('Josefina', 'Giménez', '40019234', 'josefinagimenezp@gmail.com', 'josefagprofe', DATE('1985-01-20'), 5, 5, '091334492');
-CALL sp_create_professor('Jose', 'Cabrera', '38173092', 'prof.cabreraj@gmail.com', 'cabrerajose9183', DATE('1975-12-02'), 1, , '092392743');
+CALL sp_create_professor('Jose', 'Cabrera', '38173092', 'prof.cabreraj@gmail.com', 'cabrerajose9183', DATE('1975-12-02'), 1, 6, '092392743');
 CALL sp_create_professor('Marcos', 'Da Silva', '35910394', 'marcos.dasilva@gmail.com', 'marcosdasilva123', DATE('1972-11-05'), 2, 7, '091749372');
 CALL sp_create_professor('Carlos', 'Di María', '31039223', 'dimariacarlos@gmail.com', 'carlosdimaria', DATE('1970-01-07'), 3, 8, '094629465');
 SAVEPOINT svp_2;

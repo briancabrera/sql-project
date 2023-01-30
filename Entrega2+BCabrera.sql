@@ -113,7 +113,7 @@ grade INT NOT NULL
 );
 
 ALTER TABLE users
-ADD CONSTRAINT FK_USER_USERTYPE FOREIGN KEY (user_type_id) REFERENCES user_type(user_type_id);
+ADD CONSTRAINT FK_USER_USERTYPE FOREIGN KEY (user_type_id) REFERENCES user_type(user_type_id) ON DELETE RESTRICT;
 
 ALTER TABLE student
 ADD CONSTRAINT FK_STUDENT_USER FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
@@ -127,18 +127,18 @@ ADD CONSTRAINT FK_TUTOR_USER FOREIGN KEY (user_id) REFERENCES users(user_id) ON 
 ALTER TABLE professor
 ADD CONSTRAINT FK_PROFESSOR_USER FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
 ADD CONSTRAINT FK_PROFESSOR_MUTUALIST FOREIGN KEY (mutualist_id) REFERENCES mutualist(mutualist_id),
-ADD CONSTRAINT FK_PROFESSOR_SUBJECT FOREIGN KEY (subject_id) REFERENCES subject(subject_id);
+ADD CONSTRAINT FK_PROFESSOR_SUBJECT FOREIGN KEY (subject_id) REFERENCES subject(subject_id) ON DELETE RESTRICT;
 
 ALTER TABLE class_group
-ADD CONSTRAINT FK_GROUPS_PERIOD FOREIGN KEY (period_id) REFERENCES period(period_id);
+ADD CONSTRAINT FK_GROUPS_PERIOD FOREIGN KEY (period_id) REFERENCES period(period_id) ON DELETE RESTRICT;
 
 ALTER TABLE class
-ADD CONSTRAINT FK_CLASS_GROUP FOREIGN KEY (group_id) REFERENCES class_group(group_id),
-ADD CONSTRAINT FK_CLASS_PROFESSOR FOREIGN KEY (professor_id) REFERENCES professor(professor_id) ON DELETE CASCADE,
-ADD CONSTRAINT FK_CLASS_SUBJECT FOREIGN KEY (subject_id) REFERENCES subject(subject_id);
+ADD CONSTRAINT FK_CLASS_GROUP FOREIGN KEY (group_id) REFERENCES class_group(group_id) ON DELETE CASCADE,
+ADD CONSTRAINT FK_CLASS_PROFESSOR FOREIGN KEY (professor_id) REFERENCES professor(professor_id),
+ADD CONSTRAINT FK_CLASS_SUBJECT FOREIGN KEY (subject_id) REFERENCES subject(subject_id) ON DELETE RESTRICT;
 
 ALTER TABLE assignment
-ADD CONSTRAINT FK_ASSIGNMENT_CLASS FOREIGN KEY (class_id) REFERENCES class(class_id);
+ADD CONSTRAINT FK_ASSIGNMENT_CLASS FOREIGN KEY (class_id) REFERENCES class(class_id) ON DELETE CASCADE;
 
 ALTER TABLE grade
 ADD CONSTRAINT FK_GRADE_STUDENT FOREIGN KEY (student_id) REFERENCES student(student_id) ON DELETE CASCADE,
@@ -1490,14 +1490,16 @@ IN _cedula VARCHAR(8),
 IN _email VARCHAR(255),
 IN _password VARCHAR(32),
 IN _birthdate DATE,
-IN _phone CHAR(9),
+IN _phone_number CHAR(9),
 IN _address VARCHAR(255)
 )
 BEGIN
-	CALL create_user(_f_name, _l_name, _cedula, _email, _password, _birthdate, 2, @_user_id);
+	CALL sp_create_user(_f_name, _l_name, _cedula, _email, _password, _birthdate, 2, @_user_id);
 
 	INSERT INTO tutor(user_id, phone_number, address) 
-    VALUES (@_user_id, _phone, _address);
+    VALUES (@_user_id, _phone_number, _address);
+    
+    SELECT * FROM users WHERE user_id = @_user_id;
 END
 $$
 
@@ -1510,7 +1512,7 @@ $$
 */
 
 DELIMITER $$
-CREATE PROCEDURE create_student(
+CREATE PROCEDURE sp_create_student(
 IN _f_name VARCHAR(15),
 IN _l_name VARCHAR(25),
 IN _cedula VARCHAR(8),
@@ -1522,10 +1524,12 @@ IN _tutor_id INT,
 IN _mutualist_id INT
 )
 BEGIN
-	CALL create_user(_f_name, _l_name, _cedula, _email, _password, _birthdate, 1, @_user_id);
+	CALL sp_create_user(_f_name, _l_name, _cedula, _email, _password, _birthdate, 1, @_user_id);
 
 	INSERT INTO student(user_id, group_id, tutor_id, mutualist_id) 
     VALUES (@_user_id, _group_id, _tutor_id, _mutualist_id);
+    
+    SELECT * FROM users WHERE user_id = @_user_id;
 END
 $$
 
@@ -1538,7 +1542,7 @@ $$
 */
 
 DELIMITER $$
-CREATE PROCEDURE create_professor(
+CREATE PROCEDURE sp_create_professor(
 IN _f_name VARCHAR(15),
 IN _l_name VARCHAR(25),
 IN _cedula VARCHAR(8),
@@ -1547,13 +1551,15 @@ IN _password VARCHAR(32),
 IN _birthdate DATE,
 IN _mutualist_id INT,
 IN _subject_id INT,
-IN _phone CHAR(9)
+IN _phone_number CHAR(9)
 )
 BEGIN
-	CALL create_user(_f_name, _l_name, _cedula, _email, _password, _birthdate, 3, @_user_id);
+	CALL sp_create_user(_f_name, _l_name, _cedula, _email, _password, _birthdate, 3, @_user_id);
 
-	INSERT INTO professor(user_id, mutualist_id, subject_id, phone) 
-    VALUES (@_user_id, _mutualist_id, _subject_id, _phone);
+	INSERT INTO professor(user_id, mutualist_id, subject_id, phone_number) 
+    VALUES (@_user_id, _mutualist_id, _subject_id, _phone_number);
+    
+    SELECT * FROM professor, users WHERE users.user_id = @_user_id AND professor.user_id = @_user_id;
 END
 $$
 
@@ -1636,6 +1642,10 @@ BEGIN
 END
 $$
 
+/*
+--------- TESTS ---------
+*/
+
 INSERT INTO assignment(class_id, task, start_date, end_date) VALUES (1, 'TEST 1', curdate(), curdate());
 INSERT INTO assignment(class_id, task, start_date, end_date) VALUES (3, 'TEST 2', curdate(), curdate());
 INSERT INTO assignment(class_id, task, start_date, end_date) VALUES (5, 'TEST 3', curdate(), curdate());
@@ -1645,3 +1655,86 @@ UPDATE assignment SET assignment.task = "task 4" WHERE assignment_id = 4;
 DELETE FROM assignment WHERE assignment_id = 1;
 DELETE FROM assignment WHERE assignment_id = 2;
 DELETE FROM assignment WHERE assignment_id = 3;
+
+
+/*
+-----------------------------
+		DDL SENTENCES
+-----------------------------
+*/
+
+
+/*
+-----------------------------
+		TCL SENTENCES
+-----------------------------
+*/
+
+SET SQL_SAFE_UPDATES = 0;
+/*
+SET SQL_SAFE_UPDATES = 1;
+*/
+
+START TRANSACTION;
+
+SAVEPOINT savepoint1;
+
+DELETE FROM student;
+
+SELECT * FROM student;
+
+/*
+COMMIT;
+ROLLBACK TO savepoint1;
+SELECT * FROM student;
+*/
+/*
+INSERT INTO student (user_id, student_id, group_id, tutor_id, mutualist_id) VALUES
+	(1, 1, 3, 1, 1),
+    (2, 2, 3, 2, 2),
+    (3, 3, 3, 3, 3),
+    (4, 4, 3, 4, 4),
+    (5, 5, 3, 5, 5),
+    (6, 6, 3, 6, 1),
+    (7, 7, 3, 7, 2),
+    (8, 8, 3, 8, 3),
+    (9, 9, 3, 9, 4),
+    (10, 10, 3, 10, 5),
+    (11, 11, 2, 11, 1),
+	(12, 12, 2, 12, 2),
+    (13, 13, 2, 13, 3),
+    (14, 14, 2, 14, 4),
+    (15, 15, 2, 1, 5),
+    (16, 16, 2, 2, 1),
+    (17, 17, 2, 3, 2),
+    (18, 18, 2, 4, 3),
+    (19, 19, 2, 5, 4),
+    (20, 20, 2, 6, 5),
+    (21, 21, 1, 7, 1),
+    (22, 22, 1, 8, 2),
+    (23, 23, 1, 9, 3),
+    (24, 24, 1, 10, 4),
+    (25, 25, 1, 11, 5),
+    (26, 26, 1, 12, 1),
+    (27, 27, 1, 13, 2),
+    (28, 28, 1, 15, 3);
+*/
+
+START TRANSACTION;
+
+CALL sp_create_professor('Pedro', 'Giménez', '39116482', 'prof.g.pedro@gmail.com', 'pedritoprofe', DATE('1979-05-04'), 1, 1, '099191932');
+CALL sp_create_professor('Juan', 'Sosa', '37916841', 'prof.s.juan@gmail.com', 'juansosa111', DATE('1979-04-05'), 2, 2, '092918495');
+CALL sp_create_professor('Juan Pablo', 'Romero', '41176482', 'jp.romerop@gmail.com', 'juanparomero', DATE('1989-03-03'), 3, 3, '099193743');
+CALL sp_create_professor('Roman', 'Chelsea', '38116412', 'romanchelsea@gmail.com', 'romanchelsea', DATE('1978-10-08'), 4, 4, '091833424');
+SAVEPOINT svp_1;
+CALL sp_create_professor('Josefina', 'Giménez', '40019234', 'josefinagimenezp@gmail.com', 'josefagprofe', DATE('1985-01-20'), 5, 5, '091334492');
+CALL sp_create_professor('Jose', 'Cabrera', '38173092', 'prof.cabreraj@gmail.com', 'cabrerajose9183', DATE('1975-12-02'), 1, 6, '092392743');
+CALL sp_create_professor('Marcos', 'Da Silva', '35910394', 'marcos.dasilva@gmail.com', 'marcosdasilva123', DATE('1972-11-05'), 2, 7, '091749372');
+CALL sp_create_professor('Carlos', 'Di María', '31039223', 'dimariacarlos@gmail.com', 'carlosdimaria', DATE('1970-01-07'), 3, 8, '094629465');
+SAVEPOINT svp_2;
+
+/*
+COMMIT;
+ROLLBACK;
+RELEASE SAVEPOINT svp_1;
+/*
