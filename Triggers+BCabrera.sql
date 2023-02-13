@@ -1,11 +1,193 @@
-CREATE TABLE `coderhouse_project`.`assignments_log` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `date` DATETIME NOT NULL,
-  `time` DATETIME NOT NULL,
-  `assignment_id` INT NOT NULL,
-  `professor_id` INT NOT NULL,
-  `action` VARCHAR(6) NOT NULL,
-  PRIMARY KEY (`id`));
+/*
+	USERS TRIGGERS
+*/
+
+DELIMITER $$
+CREATE TRIGGER tg_after_user_insert AFTER INSERT ON users
+FOR EACH ROW
+BEGIN
+	INSERT INTO users_log(date, time, user_id, action)
+    VALUES (CURDATE(), CURTIME(), NEW.user_id, 'create');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_user_delete BEFORE DELETE ON users
+FOR EACH ROW
+BEGIN
+	INSERT INTO users_log(date, time, user_id, action)
+    VALUES (CURDATE(), CURTIME(), OLD.user_id, 'delete');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_user_update AFTER UPDATE ON users
+FOR EACH ROW
+BEGIN
+	INSERT INTO users_log(date, time, user_id, action)
+    VALUES (CURDATE(), CURTIME(), OLD.user_id, 'update');
+END
+$$
+
+/*
+	STUDENT TRIGGERS
+*/
+
+DELIMITER $$
+CREATE TRIGGER tg_after_student_insert AFTER INSERT ON student
+FOR EACH ROW
+BEGIN
+	INSERT INTO student_log(date, time, student_id, action)
+    VALUES (CURDATE(), CURTIME(), NEW.student_id, 'create');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_student_delete BEFORE DELETE ON student
+FOR EACH ROW
+BEGIN
+	INSERT INTO student_log(date, time, student_id, action)
+    VALUES (CURDATE(), CURTIME(), OLD.student_id, 'delete');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_student_update AFTER UPDATE ON student
+FOR EACH ROW
+BEGIN
+	INSERT INTO users_log(date, time, student_id, action)
+    VALUES (CURDATE(), CURTIME(), OLD.student_id, 'update');
+END
+$$
+
+/*
+	TUTOR TRIGGERS
+*/
+
+DELIMITER $$
+CREATE TRIGGER tg_after_tutor_insert AFTER INSERT ON tutor
+FOR EACH ROW
+BEGIN
+	INSERT INTO tutor_log(date, time, tutor_id, action)
+    VALUES (CURDATE(), CURTIME(), NEW.tutor_id, 'create');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_tutor_delete BEFORE DELETE ON tutor
+FOR EACH ROW
+BEGIN
+	INSERT INTO tutor_log(date, time, tutor_id, action)
+    VALUES (CURDATE(), CURTIME(), OLD.tutor_id, 'delete');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_tutor_update AFTER UPDATE ON tutor
+FOR EACH ROW
+BEGIN
+	INSERT INTO tutor_log(date, time, tutor_id, action)
+    VALUES (CURDATE(), CURTIME(), OLD.tutor_id, 'update');
+END
+$$
+
+/*
+	PROFESSOR TRIGGERS
+*/
+
+DELIMITER $$
+CREATE TRIGGER tg_after_professor_insert AFTER INSERT ON professor
+FOR EACH ROW
+BEGIN
+	INSERT INTO professor_log(date, time, professor_id, action)
+    VALUES (CURDATE(), CURTIME(), NEW.professor_id, 'create');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_professor_delete BEFORE DELETE ON professor
+FOR EACH ROW
+BEGIN
+	INSERT INTO professor_log(date, time, professor_id, action)
+    VALUES (CURDATE(), CURTIME(), OLD.professor_id, 'delete');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_professor_update AFTER UPDATE ON professor
+FOR EACH ROW
+BEGIN
+	INSERT INTO professor_log(date, time, professor_id, action)
+    VALUES (CURDATE(), CURTIME(), OLD.professor_id, 'update');
+END
+$$
+
+/*
+	CLASS_GROUP TRIGGERS
+*/
+
+DELIMITER $$
+CREATE TRIGGER tg_after_class_group_insert AFTER INSERT ON class_group
+FOR EACH ROW
+BEGIN
+	INSERT INTO class_group_log(date, time, group_id, action)
+    VALUES (CURDATE(), CURTIME(), NEW.group_id, 'create');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_class_group_delete BEFORE DELETE ON class_group
+FOR EACH ROW
+BEGIN
+	INSERT INTO class_group_log(date, time, group_id, action)
+    VALUES (CURDATE(), CURTIME(), OLD.group_id, 'delete');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_class_group_update AFTER UPDATE ON class_group
+FOR EACH ROW
+BEGIN
+	INSERT INTO class_group_log(date, time, group_id, action)
+    VALUES (CURDATE(), CURTIME(), OLD.group_id, 'update');
+END
+$$
+
+/*
+	CLASS TRIGGERS
+*/
+
+DELIMITER $$
+CREATE TRIGGER tg_after_class_insert AFTER INSERT ON class
+FOR EACH ROW
+BEGIN
+	INSERT INTO class_log(date, time, class_id, action)
+    VALUES (CURDATE(), CURTIME(), NEW.class_id, 'create');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_class_delete BEFORE DELETE ON class
+FOR EACH ROW
+BEGIN
+	INSERT INTO class_log(date, time, class_, action)
+    VALUES (CURDATE(), CURTIME(), OLD.class_id, 'delete');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_class_update AFTER UPDATE ON class
+FOR EACH ROW
+BEGIN
+	INSERT INTO class_log(date, time, class_id, action)
+    VALUES (CURDATE(), CURTIME(), OLD.class_id, 'update');
+END
+$$
+
+/*
+	ASSIGNMENT TRIGGERS
+*/
+
 /*
 	Maneja los inserts a la tabla 'assignments', busca el ID del profesor
     correspondiente y toma el id del nuevo assignment creado.
@@ -54,7 +236,6 @@ BEGIN
 END
 $$
 
-
 /*
 	Maneja los updates a la tabla 'assignments', busca el ID del profesor
     correspondiente y toma el id del nuevo assignment creado.
@@ -79,13 +260,33 @@ BEGIN
 END
 $$
 
-INSERT INTO assignment(class_id, task, start_date, end_date) VALUES (1, 'TEST 1', curdate(), curdate());
-INSERT INTO assignment(class_id, task, start_date, end_date) VALUES (3, 'TEST 2', curdate(), curdate());
-INSERT INTO assignment(class_id, task, start_date, end_date) VALUES (5, 'TEST 3', curdate(), curdate());
-UPDATE assignment SET assignment.task = "task 2" WHERE assignment_id = 2;
-UPDATE assignment SET assignment.task = "task 3" WHERE assignment_id = 3;
-UPDATE assignment SET assignment.task = "task 4" WHERE assignment_id = 4;
-DELETE FROM assignment WHERE assignment_id = 1;
-DELETE FROM assignment WHERE assignment_id = 2;
-DELETE FROM assignment WHERE assignment_id = 3;
+/*
+	GRADE TRIGGERS
+*/
 
+DELIMITER $$
+CREATE TRIGGER tg_after_grade_insert AFTER INSERT ON grade
+FOR EACH ROW
+BEGIN
+		INSERT INTO grade_log(date, time, assignment_id, student_id, action)
+    VALUES (CURDATE(), CURTIME(), NEW.assignment_id, NEW.student_id, 'update');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_grade_delete BEFORE DELETE ON grade
+FOR EACH ROW
+BEGIN
+	INSERT INTO grade_log(date, time, assignment_id, student_id, action)
+    VALUES (CURDATE(), CURTIME(), OLD.assignment_id, OLD.student_id, 'delete');
+END
+$$
+
+DELIMITER $$
+CREATE TRIGGER tg_after_grade_update AFTER UPDATE ON grade
+FOR EACH ROW
+BEGIN
+	INSERT INTO grade_log(date, time, assignment_id, student_id, action)
+    VALUES (CURDATE(), CURTIME(), OLD.assignment_id, OLD.student_id, 'update');
+END
+$$
